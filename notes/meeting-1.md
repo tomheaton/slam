@@ -21,3 +21,8 @@ non-maximum suppression
 ## Other
 - robot kidnap
 - monte carlo
+- recursive 
+- gaussian
+- linear
+- taylor (series) approximation 
+- Jacobian
