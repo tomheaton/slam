@@ -1,0 +1,52 @@
+References:
+Cyrill Stachniss's paper - http://www2.informatik.uni-freiburg.de/~stachnis/pdf/grisetti10titsmag.pdf
+
+NOTE(gonk): for the others reading this i've got more notes if you wanna ask for it
+
+### Slam backend - optimising the cost function
+
+Meaning of variables:
+pose - information about the robot's position and yaw (and perhaps velocity too) - [x,y,yaw]
+x - (vector)robot poses, goes from 1 to N
+u - (vector)odometry data
+z - (matrix)virtual measurement 
+z_pred(x_i, x_j) - prediction of virtual measurement given two nodes
+e - matrix with errors between nodes
+H - info matrix / weight matrix - inverse of covariance matrix - it esssentially represents the uncertainty of an edge
+from node i to node j - i believe it's the same thing as the omega matrix but not 100% sure (i think omega might just be the initial H matrix guess)
+b - info vector
+C - set of pairs of indices for which a constraint exists
+
+NOTE(gonk): 'not converged' means that the nodes would align correctly (delta x is near 0), however
+usually in practice only a few iterations are made from what i've seen (like 5 or so ?)
+
+inputs: x_current (current estimation of poses), initial guess C = {}
+outputs: x*, H* - optimised pose vector and weight matrix 
+while not converged:
+    b = []
+    H = []
+    for all e[i,j], H[i,j] in C:
+        // Need to minimise error function but since it's non linear 
+        // compute the jacobians A_ij and B_ij of the error function
+        A_ij - 
+        B_ij - 
+        // matrix.T - transposed
+        // "Compute the contribuition of this function to the linear system"
+        H[i,i] += A_ij.T @ omega_ij @ A_ij; H[i,j] += A_ij.T @ omega_ij @ B_ij
+        H[j,i] += B_ij.T @ omega_ij @ A_ij; H[j,j] += B_ij.T @ omega_ij @ B_ij
+        // "Computer the coefficient vector"
+        b[i] += A_ij.T @ omega_ij @ e_ij
+        b[j] += B_ij.T @ omega_ij @ e_ij
+    end for
+    // this is done so that the matrix can have an inverse operation? since the determinant
+    // wont be 0??
+    // NOTE: im still not totally sure why this is done
+    H[0, 0] += I
+    // solution to this is given by simply delta_x = - H.inverse @ b
+    // however this is slow therefore usually a sparse solver 
+    // such is used such as cholesky factorisation 
+    delta_x = solve(H @ delta_x = -b)
+    x_current += delta_x
+end while
+H[0, 0] -= I
+return x*, H
